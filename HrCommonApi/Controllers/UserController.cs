@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
-namespace CargoHub.Controllers;
+namespace HrCommonApi.Controllers;
 
 // Type aliases for readability
 using ControllerType = UserController;

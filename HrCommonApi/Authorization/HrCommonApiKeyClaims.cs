@@ -1,7 +1,7 @@
 ﻿namespace HrCommonApi.Authorization;
 
 /// <summary>
-/// The API key claims used by CargoHub.
+/// The API key claims.
 /// </summary>
 public static class HrCommonApiKeyClaims
 {

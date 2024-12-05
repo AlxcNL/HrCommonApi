@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace CargoHub.Controllers;
+namespace HrCommonApi.Controllers;
 
 /// <summary>
 /// The behemoth of all controllers. 
