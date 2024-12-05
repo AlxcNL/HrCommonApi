@@ -21,7 +21,7 @@ public static class IApplicationBuilderExtensions
     public static IApplicationBuilder AddHrCommonApiMiddleware<TKey>(this IApplicationBuilder app, IConfiguration configuration) where TKey : ApiKey
     {
         var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
-        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleUser"] == "true";
+        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:Enabled"] == "true";
 
         if (keyEnabled)
         {

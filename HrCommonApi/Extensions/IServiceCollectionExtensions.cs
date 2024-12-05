@@ -31,8 +31,8 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddHrCommonApiServices(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
     {
         var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
-        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleUser"] == "true";
-        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
+        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:Enabled"] == "true";
+        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:SimpleUser"] == "true";
         var simpleKeyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleKey"] == "true";
 
         // JWT or API keys, probably both
