@@ -4,6 +4,20 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>HR Common Api Library</Title>
+    <Authors>Tukurai</Authors>
+    <Company>Esper Solutions</Company>
+    <Product>HrCommonApi</Product>
+    <Description>This library is meant to be used for common Api solutions during my studies at HR. Feel free to use this however you see fit.</Description>
+    <PackageProjectUrl>https://github.com/Tukurai/HrCommonApi</PackageProjectUrl>
+    <Copyright>Distributed under the GPL-3.0 license</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>webapi</PackageTags>
+    <RepositoryUrl>https://github.com/Tukurai/HrCommonApi</RepositoryUrl>
+    <PackageIcon>HrCommonApi.jpg</PackageIcon>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +32,24 @@
   
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="HrCommonApi.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
