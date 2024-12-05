@@ -50,10 +50,10 @@ public static class ModelBuilderExtensions
     /// </summary>
     public static ModelBuilder MapCommonEntities(this ModelBuilder modelBuilder, IConfiguration configuration)
     {
-        var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
-        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:Enabled"] == "true";
-        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:SimpleUser"] == "true";
-        var simpleKeyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleKey"] == "true";
+        var jwtEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:Enabled");
+        var keyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:Enabled");
+        var simpleUserEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:SimpleUser");
+        var simpleKeyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:SimpleKey");
 
         if (jwtEnabled)
         {

@@ -30,10 +30,10 @@ public static class IServiceCollectionExtensions
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
     public static IServiceCollection AddHrCommonApiServices(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
     {
-        var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
-        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:Enabled"] == "true";
-        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:SimpleUser"] == "true";
-        var simpleKeyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleKey"] == "true";
+        var jwtEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:Enabled");
+        var keyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:Enabled");
+        var simpleUserEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:SimpleUser");
+        var simpleKeyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:SimpleKey");
 
         // JWT or API keys, probably both
         if (jwtEnabled)
