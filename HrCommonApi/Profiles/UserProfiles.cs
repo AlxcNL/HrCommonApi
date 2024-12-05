@@ -5,14 +5,9 @@ using HrCommonApi.Database.Models;
 
 namespace HrCommonApi.Profiles;
 
-public class UserProfiles : Profile
+public class ApiKeyProfiles : Profile
 {
-    public UserProfiles()
+    public ApiKeyProfiles()
     {
-        CreateMap<CreateUserRequest, User>();
-        CreateMap<UpdateUserRequest, User>();
-        CreateMap<User, SimpleUserResponse>();
-        CreateMap<User, UserSessionsResponse>();
-        CreateMap<Session, UserSessionResponse>();
     }
 }

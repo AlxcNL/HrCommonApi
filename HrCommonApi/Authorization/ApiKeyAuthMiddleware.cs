@@ -1,4 +1,6 @@
 ﻿using HrCommonApi.Database;
+using HrCommonApi.Database.Models;
+using HrCommonApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
@@ -8,10 +10,9 @@ namespace HrCommonApi.Authorization;
 /// <summary>
 /// This middleware adds extra claims based on the API key header. It is only blocking is a claimed api key is not present or is invalid.
 /// </summary>
-public class ApiKeyAuthMiddleware(RequestDelegate _next)
+public class ApiKeyAuthMiddleware<TApiKey>(RequestDelegate _next) where TApiKey : ApiKey
 {
-
-    public async Task InvokeAsync(HttpContext context, HrDataContext dataContext, IConfiguration configuration)
+    public async Task InvokeAsync(HttpContext context, ApiKeyService<TApiKey> apiKeyService, IConfiguration configuration)
     {
         var apiKeyHeaderName = configuration["HrCommonApi:ApiKeyName"]!;
         var apiKeys = configuration.GetSection("HrCommonApi:AcceptedApiKeys").Get<List<string>>()!;
@@ -25,9 +26,24 @@ public class ApiKeyAuthMiddleware(RequestDelegate _next)
                 return;
             }
 
-            var apiKeyIdentity = new ClaimsIdentity("ApiKey");
-            apiKeyIdentity.AddClaim(new Claim(HrCommonApiKeyClaims.ApiKey, extractedApiKey!));
-            context.User.AddIdentity(apiKeyIdentity);
+            var response = await apiKeyService.Authorize(extractedApiKey);
+            if (response.Response != Enums.ServiceResponse.Success)
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsync(response.Message);
+                return;
+            }
+
+            if (response.Result!.Enabled)
+            {
+                var apiKeyIdentity = new ClaimsIdentity("ApiKey");
+                apiKeyIdentity.AddClaim(new Claim(HrCommonApiKeyClaims.ApiKey, extractedApiKey!));
+
+                foreach (var claim in response.Result!.Rights)
+                    apiKeyIdentity.AddClaim(new Claim(claim.Name, claim.Value));
+
+                context.User.AddIdentity(apiKeyIdentity);
+            }
         }
 
         await _next(context);

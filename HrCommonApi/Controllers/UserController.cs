@@ -12,22 +12,18 @@ using System.Security.Claims;
 
 namespace HrCommonApi.Controllers;
 
-// Type aliases for readability
-using ControllerType = UserController;
-using CreateType = CreateUserRequest;
-using EntityType = User;
-using ServiceType = IUserService;
-using SimpleType = SimpleUserResponse;
-using UpdateType = UpdateUserRequest;
-
 /// <summary>
 /// The user controller. 
 /// Handles all user-related requests. 
 /// Requires no policy due to needing to be able to log in.
 /// </summary>
 [ApiController]
-public class UserController(ILogger<ControllerType> logger, IMapper mapper, ServiceType service)
-    : CoreController<ControllerType, ServiceType, EntityType, SimpleType, CreateType, UpdateType>(logger, mapper, service)
+public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<UserController<TUser, TCreate, TSimple, TUpdate>> logger, IMapper mapper, IUserService<TUser> service)
+    : CoreController<UserController<TUser, TCreate, TSimple, TUpdate>, IUserService<TUser>, TUser, TSimple, TCreate, TUpdate>(logger, mapper, service) 
+    where TUser : User 
+    where TCreate : CreateUserRequest 
+    where TSimple : SimpleUserResponse 
+    where TUpdate : UpdateUserRequest
 {
     /// <summary>
     /// Logs in the <see cref="EntityType"/> if the provided password is correct for the provided username. Then creates a session for this user.
@@ -35,7 +31,7 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     /// <param name="loginRequest">The model for the registration request containing the details of the <see cref="EntityType"/> to be created.</param>
     /// <returns>Returns a JWT token that can be used to authenticate users with.</returns>
     [HttpPost("Login")]
-    public async Task<IActionResult> Login([FromBody] LoginUserRequest loginRequest) => await HandleRequestFlow(async () => {
+    public virtual async Task<IActionResult> Login([FromBody] LoginUserRequest loginRequest) => await HandleRequestFlow(async () => {
         var loginResult = await CoreService.Login(loginRequest.Username, loginRequest.Password);
         if (loginResult.Response != ServiceResponse.Success)
             return new ServiceResult<LoginResponse>(loginResult.Response, message: loginResult.Message, exception: loginResult.Exception);
@@ -64,7 +60,7 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     /// </summary>
     /// <returns>Returns a <see cref="SessionStateResponse"/> containing a <see cref="EntityType"/> with its active <see cref="Session"/>(s).</returns>
     [HttpGet("Session")]
-    public async Task<IActionResult> Session() => await HandleRequestFlow(async () => {
+    public virtual async Task<IActionResult> Session() => await HandleRequestFlow(async () => {
         var userId = new Guid(GetFromClaim(ClaimTypes.NameIdentifier, Guid.Empty.ToString()));
         var activeSessions = await CoreService.GetUserSessions(userId);
         if (activeSessions == null)
@@ -88,7 +84,7 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     /// <returns>Returns a list of <see cref="SessionResponse"/> containing the user's <see cref="Session"/>(s).</returns>
     [Authorize(Policy = "Admin")]
     [HttpGet("{userId}/Session")]
-    public async Task<IActionResult> GetUserSessions(Guid userId)
+    public virtual async Task<IActionResult> GetUserSessions(Guid userId)
         => await HandleRequestFlow<List<UserSessionResponse>, List<Session>>(() => CoreService.GetUserSessions(userId));
 
     /// <summary>
@@ -98,7 +94,7 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     /// <returns>A single simple response.</returns>
     [HttpPost("Admin"), Authorize(Policy = "Admin")]
     public virtual async Task<IActionResult> Create(CreateAdminRequest createRequest)
-        => await CreateToResponseModel<SimpleType>(createRequest);
+        => await CreateToResponseModel<TSimple>(createRequest);
 
     /// <summary>
     /// Returns the item that was created, if successfully.
@@ -106,7 +102,7 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     /// <param name="createRequest">The creation request related to this entity.</param>
     /// <returns>A single simple response.</returns>
     [HttpPost, AllowAnonymous]
-    public override async Task<IActionResult> Create(CreateType createRequest)
+    public override async Task<IActionResult> Create(TCreate createRequest)
         => await base.Create(createRequest);
 
     /// <summary>
@@ -118,5 +114,5 @@ public class UserController(ILogger<ControllerType> logger, IMapper mapper, Serv
     [Authorize(Policy = "Admin")]
     [HttpGet("{userId}/Details")]
     public async Task<IActionResult> GetUserDetails(Guid userId)
-        => await HandleRequestFlow<ExtendedUserResponse, EntityType>(() => CoreService.Get(userId));
+        => await HandleRequestFlow<ExtendedUserResponse, TUser>(() => CoreService.Get(userId));
 }

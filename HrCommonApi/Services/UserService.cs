@@ -13,46 +13,46 @@ using System.Text;
 
 namespace HrCommonApi.Services;
 
-public class UserService(HrDataContext context, IConfiguration configuration) : CoreService<User>(context), IUserService
+public class UserService<TUser>(HrDataContext context, IConfiguration configuration) : CoreService<TUser>(context), IUserService<TUser> where TUser : User
 {
     private IConfiguration Configuration { get; } = configuration;
     private DbSet<Session> Sessions => Context.Set<Session>();
 
-    public async Task<ServiceResult<User>> Login(string username, string password)
+    public async Task<ServiceResult<TUser>> Login(string username, string password)
     {
         try
         {
             var account = await ServiceTable.FirstOrDefaultAsync(q => q.Username == username);
             if (account == null)
-                return new ServiceResult<User>(ServiceResponse.NotFound, message: "Account not found");
+                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Account not found");
 
             var passwordManager = new PasswordManager();
 
             if (!passwordManager.VerifyPassword(account.Password!, password))
-                return new ServiceResult<User>(ServiceResponse.NotFound, message: "Invalid password");
+                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Invalid password");
 
             var existingSessions = await GetUserSessions(account.Id);
             if (existingSessions.Response != ServiceResponse.Success)
-                return new ServiceResult<User>(existingSessions.Response, message: existingSessions.Message, exception: existingSessions.Exception);
+                return new ServiceResult<TUser>(existingSessions.Response, message: existingSessions.Message, exception: existingSessions.Exception);
 
             if (existingSessions.Result == null || !existingSessions.Result.Any())
             {
                 var session = await RegisterSession(account); // Attempt to register a session
                 if (session == null)
-                    return new ServiceResult<User>(ServiceResponse.Exception, message: "Failed to register session");
+                    return new ServiceResult<TUser>(ServiceResponse.Exception, message: "Failed to register session");
 
                 // Generate a session and use the expiration date generated to set the session expiration in the database
                 var jwt = GenerateJwt(username, account.Role, account.Id, session.Id, out var accessExpiration, out var renewExpiration);
                 session = await SetJwtTokenAndExpiration(session.Id, jwt, GenerateRefreshToken(), accessExpiration, renewExpiration);
                 if (session == null)
-                    return new ServiceResult<User>(ServiceResponse.Exception, message: "Failed to set session");
+                    return new ServiceResult<TUser>(ServiceResponse.Exception, message: "Failed to set session");
             }
 
-            return new ServiceResult<User>(ServiceResponse.Success, account, message: "Successfully authorized");
+            return new ServiceResult<TUser>(ServiceResponse.Success, account, message: "Successfully authorized");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<User>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
         }
     }
 
@@ -80,10 +80,10 @@ public class UserService(HrDataContext context, IConfiguration configuration) : 
     /// </summary>
     private string GenerateJwt(string username, Role role, Guid id, Guid jti, out DateTime accessExpiration, out DateTime renewExpiration)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["HrCommonApi:Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["Jwt:ExpireMinutes"]));
-        renewExpiration = DateTime.Now.AddDays(Convert.ToInt32(Configuration["Jwt:RefreshTokenValidityInDays"]));
+        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:Jwt:TokenExpirationMinutes"]));
+        renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:Jwt:RefreshExpirationInMinutes"]));
 
         var claims = new[]
         {
@@ -94,8 +94,8 @@ public class UserService(HrDataContext context, IConfiguration configuration) : 
         };
 
         var token = new JwtSecurityToken(
-            issuer: Configuration["Jwt:Issuer"],
-            audience: Configuration["Jwt:Audience"],
+            issuer: Configuration["HrCommonApi:Jwt:Issuer"],
+            audience: Configuration["HrCommonApi:Jwt:Audience"],
             claims: claims,
             expires: accessExpiration,
             signingCredentials: creds);
@@ -142,18 +142,18 @@ public class UserService(HrDataContext context, IConfiguration configuration) : 
         return Convert.ToBase64String(randomNumber);
     }
 
-    public override async Task<ServiceResult<User>> Create(User entity)
+    public override async Task<ServiceResult<TUser>> Create(TUser entity)
     {
         try
         {
             if (ServiceTable.Any(q => q.Username == entity.Username))
-                return new ServiceResult<User>(ServiceResponse.BadRequest, message: "Username already exists!");
+                return new ServiceResult<TUser>(ServiceResponse.BadRequest, message: "Username already exists!");
 
             return await base.Create(entity);
         }
         catch (Exception exception)
         {
-            return new ServiceResult<User>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
         }
     }
 }

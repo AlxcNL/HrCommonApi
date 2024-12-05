@@ -1,4 +1,5 @@
-﻿using HrCommonApi.Database.Models.Base;
+﻿using HrCommonApi.Database.Models;
+using HrCommonApi.Database.Models.Base;
 using HrCommonApi.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,7 @@ public static class ModelBuilderExtensions
         modelBuilder.AddEntityModelsFromNamespace(targetNamespace);
 
         // Add this libraries models
-        modelBuilder.AddEntityModelsFromNamespace("HrCommonApi.Database.Models");
+        modelBuilder.MapCommonEntities(configuration!);
 
         return modelBuilder;
     }
@@ -39,6 +40,42 @@ public static class ModelBuilderExtensions
             {
                 entityType.GetMethod(nameof(IMappedEntity.MapEntity), BindingFlags.Static | BindingFlags.Public)!.Invoke(null, [modelBuilder]);
             }
+        }
+
+        return modelBuilder;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static ModelBuilder MapCommonEntities(this ModelBuilder modelBuilder, IConfiguration configuration)
+    {
+        var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
+        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleUser"] == "true";
+        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
+        var simpleKeyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleKey"] == "true";
+
+        if (jwtEnabled)
+        {
+            if (simpleUserEnabled)
+            {
+                modelBuilder.Entity<User>().HasKey(q => q.Id);
+                modelBuilder.Entity<User>().HasIndex(q => q.Username).IsUnique();
+            }
+
+            modelBuilder.Entity<Session>().HasKey(q => q.Id);
+            modelBuilder.Entity<Session>().HasIndex(q => q.AccessToken).IsUnique();
+        }
+
+        if (keyEnabled)
+        {
+            if (simpleKeyEnabled)
+            {
+                modelBuilder.Entity<ApiKey>().HasKey(q => q.Id);
+                modelBuilder.Entity<ApiKey>().HasIndex(q => q.Key).IsUnique();
+            }
+
+            modelBuilder.Entity<Right>().HasKey(q => q.Id);
         }
 
         return modelBuilder;

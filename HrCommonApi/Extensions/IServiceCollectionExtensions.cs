@@ -1,12 +1,21 @@
 ﻿using AutoMapper;
+using HrCommonApi.Authorization;
 using HrCommonApi.Database;
+using HrCommonApi.Database.Models;
 using HrCommonApi.Database.Models.Base;
+using HrCommonApi.Profiles;
+using HrCommonApi.Services;
 using HrCommonApi.Services.Base;
 using HrCommonApi.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Text;
 
 namespace HrCommonApi.Extensions;
 
@@ -19,8 +28,101 @@ public static class IServiceCollectionExtensions
     /// Adds the services, profiles, and database context to the DI container.
     /// </summary>
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
-    public static IServiceCollection AddHrCommonApiServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddHrCommonApiServices(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
     {
+        var jwtEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
+        var keyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleUser"] == "true";
+        var simpleUserEnabled = configuration?["HrCommonApi:JwtAuthorization:Enabled"] == "true";
+        var simpleKeyEnabled = configuration?["HrCommonApi:ApiKeyAuthorization:SimpleKey"] == "true";
+
+        // JWT or API keys, probably both
+        if (jwtEnabled)
+        {
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false; // Set to true in production
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = configuration?["JwtAuthorization:Jwt:Issuer"],
+                    ValidAudience = configuration?["JwtAuthorization:Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtAuthorization:Jwt:Key"]!))
+                };
+            });
+        }
+
+        if (jwtEnabled || keyEnabled)
+        {
+            services.AddAuthorization(HrCommonApiPolicies.ConfigurePolicies);
+            if (configureCustomAuthorization != null)
+                services.AddAuthorization(configureCustomAuthorization);
+        }
+
+        // Swagger
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(q =>
+        {
+            if (!jwtEnabled && !keyEnabled)
+                return;
+
+            var securityRequirement = new OpenApiSecurityRequirement();
+
+            if (jwtEnabled)
+            {
+                // Define the Bearer token security scheme
+                q.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer"
+                });
+
+                securityRequirement.Add(new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                }, new string[] { });
+            }
+
+            if (keyEnabled)
+            {
+                // Define the API key security scheme
+                q.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+                {
+                    Description = "API key needed to access the endpoints using the ApiKey scheme. Example: \"Authorization: x-api-key {key}\"",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Name = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"],
+                    Scheme = "ApiKey"
+                });
+
+                securityRequirement.Add(new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "ApiKey"
+                    }
+                }, new string[] { });
+            }
+
+            // Add a security requirement that includes both schemes
+            q.AddSecurityRequirement(securityRequirement);
+        });
+
         var targetServicesNamespace = configuration?["HrCommonApi:Namespaces:Services"] ?? null;
         if (string.IsNullOrEmpty(targetServicesNamespace))
             throw new InvalidOperationException("The target namespace for the Services is not set. Expected configuration key: \"HrCommonApi:Namespaces:Services\"");
@@ -29,7 +131,10 @@ public static class IServiceCollectionExtensions
         services.AddServicesFromNamespace(targetServicesNamespace);
 
         // Add this libraries services
-        services.AddServicesFromNamespace("HrCommonApi.Services");
+        if (jwtEnabled && simpleUserEnabled)
+            services.AddScoped<IUserService<User>, UserService<User>>();
+        if (keyEnabled && simpleKeyEnabled)
+            services.AddScoped<IApiKeyService<ApiKey>, ApiKeyService<ApiKey>>();
 
         var targetProfilesNamespace = configuration?["HrCommonApi:Namespaces:Profiles"] ?? null;
         if (string.IsNullOrEmpty(targetProfilesNamespace))
@@ -39,7 +144,10 @@ public static class IServiceCollectionExtensions
         services.AddProfilesFromNamespace(targetProfilesNamespace);
 
         // Add this libraries profiles
-        services.AddProfilesFromNamespace("HrCommonApi.Profiles");
+        if (jwtEnabled && simpleUserEnabled)
+            services.AddAutoMapper(typeof(UserProfiles));
+        if (keyEnabled && simpleKeyEnabled)
+            services.AddAutoMapper(typeof(ApiKeyProfiles));
 
         // Database context
         var targetConnectionString = configuration?["HrCommonApi:ConnectionString"] ?? null;
