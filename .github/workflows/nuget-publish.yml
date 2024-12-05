@@ -30,9 +30,17 @@ jobs:
       
     - name: Test
       run: dotnet test --no-build --verbosity normal
+  
+    - name: Determine Version
+      id: get_version
+      run: |
+        # Get the current commit count to use as the revision number
+        revision=$(git rev-list --count HEAD)
+        # Set the version in the format Major.Minor.Patch.Revision
+        echo "VERSION=1.0.0.${revision}" >> $GITHUB_ENV
       
     - name: Pack
-      run: dotnet pack --configuration Release --output ./nupkgs
+      run: dotnet pack --configuration Release --output ./nupkgs /p:Version=${{ env.VERSION }}
       
     - name: Publish to NuGet
       run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
