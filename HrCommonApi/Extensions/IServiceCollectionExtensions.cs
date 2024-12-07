@@ -148,10 +148,10 @@ public static class IServiceCollectionExtensions
         services.AddServicesFromNamespace(targetServicesNamespace);
 
         // Add this libraries services
-        if (jwtEnabled && simpleUserEnabled)
-            services.AddScoped<IUserService<User>, UserService<User>>();
-        if (keyEnabled && simpleKeyEnabled)
-            services.AddScoped<IApiKeyService<ApiKey>, ApiKeyService<ApiKey>>();
+        if (jwtEnabled)
+            services.AddScoped<IUserService<TUser>, UserService<TUser>>();
+        if (keyEnabled)
+            services.AddScoped<IApiKeyService<TKey>, ApiKeyService<TKey>>();
 
         var targetProfilesNamespace = configuration?["HrCommonApi:Namespaces:Profiles"] ?? null;
         if (string.IsNullOrEmpty(targetProfilesNamespace))

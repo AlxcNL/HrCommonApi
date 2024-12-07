@@ -81,11 +81,8 @@ public static class ModelBuilderExtensions
 
         if (jwtEnabled)
         {
-            if (simpleUserEnabled)
-            {
-                modelBuilder.Entity<User>().HasKey(q => q.Id);
-                modelBuilder.Entity<User>().HasIndex(q => q.Username).IsUnique();
-            }
+            modelBuilder.Entity<User>().HasKey(q => q.Id);
+            modelBuilder.Entity<User>().HasIndex(q => q.Username).IsUnique();
 
             modelBuilder.Entity<Session>().HasKey(q => q.Id);
             modelBuilder.Entity<Session>().HasIndex(q => q.AccessToken).IsUnique();
@@ -93,11 +90,8 @@ public static class ModelBuilderExtensions
 
         if (keyEnabled)
         {
-            if (simpleKeyEnabled)
-            {
-                modelBuilder.Entity<ApiKey>().HasKey(q => q.Id);
-                modelBuilder.Entity<ApiKey>().HasIndex(q => q.Key).IsUnique();
-            }
+            modelBuilder.Entity<ApiKey>().HasKey(q => q.Id);
+            modelBuilder.Entity<ApiKey>().HasIndex(q => q.Key).IsUnique();
 
             modelBuilder.Entity<Right>().HasKey(q => q.Id);
         }
