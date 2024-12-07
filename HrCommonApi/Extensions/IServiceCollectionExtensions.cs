@@ -29,7 +29,8 @@ public static class IServiceCollectionExtensions
     /// Adds the services, profiles, and database context to the DI container.
     /// </summary>
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
-    public static IServiceCollection AddHrCommonApiServices(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+    public static IServiceCollection AddHrCommonApiServices<TDataContext>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+        where TDataContext : HrCommonDataContext
     {
         var jwtEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:Enabled");
         var keyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:Enabled");
@@ -155,12 +156,8 @@ public static class IServiceCollectionExtensions
         if (string.IsNullOrEmpty(targetConnectionString))
             throw new InvalidOperationException("The target ConnectionString for the HrCommonApi is missing. Expected configuration key: \"HrCommonApi:ConnectionString\"");
 
-        var targetAssembly = configuration?["HrCommonApi:MigrationsAssembly"] ?? null;
-        if (string.IsNullOrEmpty(targetAssembly))
-            throw new InvalidOperationException("The target target assembly  is missing. Expected configuration key: \"HrCommonApi:MigrationsAssembly\"");
-
-        services.AddDbContext<HrDataContext>(options =>
-            options.UseNpgsql(configuration!.GetConnectionString(targetConnectionString), b => b.MigrationsAssembly(targetAssembly))
+        services.AddDbContext<TDataContext>(options =>
+            options.UseNpgsql(configuration!.GetConnectionString(targetConnectionString))
             .UseLazyLoadingProxies()
         );
 

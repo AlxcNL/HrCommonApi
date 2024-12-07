@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HrCommonApi.Services.Base;
 
-public abstract class CoreService<TEntity>(HrDataContext context) : ICoreService<TEntity> where TEntity : DbEntity
+public abstract class CoreService<TEntity>(HrCommonDataContext context) : ICoreService<TEntity> where TEntity : DbEntity
 {
-    protected HrDataContext Context { get; } = context;
+    protected HrCommonDataContext Context { get; } = context;
     protected DbSet<TEntity> ServiceTable => Context.Set<TEntity>()!;
 
     public virtual async Task<ServiceResult<List<TEntity>>> Get(Guid[]? ids = null)

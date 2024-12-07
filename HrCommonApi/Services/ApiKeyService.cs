@@ -13,7 +13,7 @@ using System.Text;
 
 namespace HrCommonApi.Services;
 
-public class ApiKeyService<TApiKey>(HrDataContext context) : CoreService<TApiKey>(context), IApiKeyService<TApiKey> where TApiKey : ApiKey
+public class ApiKeyService<TApiKey>(HrCommonDataContext context) : CoreService<TApiKey>(context), IApiKeyService<TApiKey> where TApiKey : ApiKey
 {
     public async Task<ServiceResult<TApiKey>> Authorize(string key)
     {

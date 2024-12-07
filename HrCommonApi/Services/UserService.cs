@@ -13,7 +13,7 @@ using System.Text;
 
 namespace HrCommonApi.Services;
 
-public class UserService<TUser>(HrDataContext context, IConfiguration configuration) : CoreService<TUser>(context), IUserService<TUser> where TUser : User
+public class UserService<TUser>(HrCommonDataContext context, IConfiguration configuration) : CoreService<TUser>(context), IUserService<TUser> where TUser : User
 {
     private IConfiguration Configuration { get; } = configuration;
     private DbSet<Session> Sessions => Context.Set<Session>();
