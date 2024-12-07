@@ -16,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace HrCommonApi.Extensions;
 
@@ -154,8 +155,13 @@ public static class IServiceCollectionExtensions
         if (string.IsNullOrEmpty(targetConnectionString))
             throw new InvalidOperationException("The target ConnectionString for the HrCommonApi is missing. Expected configuration key: \"HrCommonApi:ConnectionString\"");
 
+        var targetAssembly = configuration?["HrCommonApi:MigrationsAssembly"] ?? null;
+        if (string.IsNullOrEmpty(targetAssembly))
+            throw new InvalidOperationException("The target target assembly  is missing. Expected configuration key: \"HrCommonApi:MigrationsAssembly\"");
+
         services.AddDbContext<HrDataContext>(options =>
-            options.UseNpgsql(configuration!.GetConnectionString(targetConnectionString)).UseLazyLoadingProxies()
+            options.UseNpgsql(configuration!.GetConnectionString(targetConnectionString), b => b.MigrationsAssembly(targetAssembly))
+            .UseLazyLoadingProxies()
         );
 
         return services;
