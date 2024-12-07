@@ -25,17 +25,32 @@ namespace HrCommonApi.Extensions;
 /// </summary>
 public static class IServiceCollectionExtensions
 {
+
+    public static IServiceCollection AddHrCommonApiServices<TDataContext>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+        where TDataContext : HrCommonDataContext
+        => services.AddHrCommonApiServices<TDataContext, User, ApiKey>(configuration, configureCustomAuthorization, false, false);
+
+    public static IServiceCollection AddHrCommonJwtApiServices<TDataContext, TUser>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+        where TDataContext : HrCommonDataContext
+        where TUser : User
+        => services.AddHrCommonApiServices<TDataContext, TUser, ApiKey>(configuration, configureCustomAuthorization, true, false);
+
+    public static IServiceCollection AddHrCommonKeyApiServices<TDataContext, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+        where TDataContext : HrCommonDataContext
+        where TKey : ApiKey
+        => services.AddHrCommonApiServices<TDataContext, User, TKey>(configuration, configureCustomAuthorization, false, true);
+
     /// <summary>
     /// Adds the services, profiles, and database context to the DI container.
     /// </summary>
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
-    public static IServiceCollection AddHrCommonApiServices<TDataContext>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+    public static IServiceCollection AddHrCommonApiServices<TDataContext, TUser, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null, bool jwtEnabled = true, bool keyEnabled = true)
         where TDataContext : HrCommonDataContext
+        where TUser : User
+        where TKey : ApiKey
     {
-        var jwtEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:Enabled");
-        var keyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:Enabled");
-        var simpleUserEnabled = configuration.GetValue<bool>("HrCommonApi:JwtAuthorization:SimpleUser");
-        var simpleKeyEnabled = configuration.GetValue<bool>("HrCommonApi:ApiKeyAuthorization:SimpleKey");
+        var simpleUserEnabled = typeof(TUser) == typeof(User);
+        var simpleKeyEnabled = typeof(TKey) == typeof(ApiKey);
 
         // JWT or API keys, probably both
         if (jwtEnabled)
