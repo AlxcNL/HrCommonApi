@@ -27,16 +27,16 @@ public static class IServiceCollectionExtensions
 {
 
     public static IServiceCollection AddHrCommonApiServices<TDataContext>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
-        where TDataContext : HrCommonDataContext
+        where TDataContext : DbContext
         => services.AddHrCommonApiServices<TDataContext, User, ApiKey>(configuration, configureCustomAuthorization, false, false);
 
     public static IServiceCollection AddHrCommonJwtApiServices<TDataContext, TUser>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
-        where TDataContext : HrCommonDataContext
+        where TDataContext : DbContext
         where TUser : User
         => services.AddHrCommonApiServices<TDataContext, TUser, ApiKey>(configuration, configureCustomAuthorization, true, false);
 
     public static IServiceCollection AddHrCommonKeyApiServices<TDataContext, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
-        where TDataContext : HrCommonDataContext
+        where TDataContext : DbContext
         where TKey : ApiKey
         => services.AddHrCommonApiServices<TDataContext, User, TKey>(configuration, configureCustomAuthorization, false, true);
 
@@ -45,7 +45,7 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
     public static IServiceCollection AddHrCommonApiServices<TDataContext, TUser, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null, bool jwtEnabled = true, bool keyEnabled = true)
-        where TDataContext : HrCommonDataContext
+        where TDataContext : DbContext
         where TUser : User
         where TKey : ApiKey
     {
