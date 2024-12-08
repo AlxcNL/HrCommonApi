@@ -149,9 +149,9 @@ public static class IServiceCollectionExtensions
 
         // Add this libraries services
         if (jwtEnabled)
-            services.AddScoped<IUserService<TUser>, UserService<TUser>>();
+            services.AddScoped<IUserService<TUser>, UserService<TUser, TDataContext>>();
         if (keyEnabled)
-            services.AddScoped<IApiKeyService<TKey>, ApiKeyService<TKey>>();
+            services.AddScoped<IApiKeyService<TKey>, ApiKeyService<TKey, TDataContext>>();
 
         var targetProfilesNamespace = configuration?["HrCommonApi:Namespaces:Profiles"] ?? null;
         if (string.IsNullOrEmpty(targetProfilesNamespace))
