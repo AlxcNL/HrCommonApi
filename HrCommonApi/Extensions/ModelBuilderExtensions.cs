@@ -37,7 +37,7 @@ public static class ModelBuilderExtensions
         modelBuilder.AddEntityModelsFromNamespace(targetNamespace);
 
         // Add this libraries models
-        modelBuilder.MapCommonEntities();
+        modelBuilder.MapCommonEntities<TUser, TKey>(jwtEnabled, keyEnabled);
 
         return modelBuilder;
     }
@@ -47,13 +47,11 @@ public static class ModelBuilderExtensions
     /// </summary>
     public static ModelBuilder AddEntityModelsFromNamespace(this ModelBuilder modelBuilder, string targetNamespace)
     {
-        foreach (var entityType in ReflectionUtils.GetTypesInNamespaceImplementing<DbEntity>(Assembly.GetExecutingAssembly(), targetNamespace))
-        {
-            if (typeof(IMappedEntity).IsAssignableFrom(entityType))
-            {
-                entityType.GetMethod(nameof(IMappedEntity.MapEntity), BindingFlags.Static | BindingFlags.Public)!.Invoke(null, [modelBuilder]);
-            }
-        }
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
+        Console.WriteLine($"Models Assembly: {assembly}");
+
+        foreach (var entityType in ReflectionUtils.GetTypesInNamespaceImplementing<DbEntity>(assembly, targetNamespace))
+            modelBuilder.Entity(entityType);
 
         return modelBuilder;
     }

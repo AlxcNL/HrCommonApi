@@ -185,7 +185,10 @@ public static class IServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddServicesFromNamespace(this IServiceCollection services, string targetNamespace)
     {
-        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<CoreService<DbEntity>>(Assembly.GetExecutingAssembly(), targetNamespace))
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
+        Console.WriteLine($"Services Assembly: {assembly}");
+
+        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<CoreService<DbEntity>>(assembly, targetNamespace))
         {
             Type? serviceType = ReflectionUtils.TryGetInterfaceForType(implementationType);
             if (serviceType == null)
@@ -202,7 +205,10 @@ public static class IServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddProfilesFromNamespace(this IServiceCollection services, string targetNamespace)
     {
-        foreach (var type in ReflectionUtils.GetTypesInNamespaceImplementing<Profile>(Assembly.GetExecutingAssembly(), targetNamespace))
+        var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
+        Console.WriteLine($"Profiles Assembly: {assembly}");
+
+        foreach (var type in ReflectionUtils.GetTypesInNamespaceImplementing<Profile>(assembly, targetNamespace))
         {
             services.AddAutoMapper(type);
         }
