@@ -1,6 +1,7 @@
 ﻿using HrCommonApi.Database;
 using HrCommonApi.Database.Models;
 using HrCommonApi.Services;
+using HrCommonApi.Services.Base;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
@@ -12,7 +13,7 @@ namespace HrCommonApi.Authorization;
 /// </summary>
 public class ApiKeyAuthMiddleware<TApiKey>(RequestDelegate _next) where TApiKey : ApiKey
 {
-    public async Task InvokeAsync(HttpContext context, ApiKeyService<TApiKey> apiKeyService, IConfiguration configuration)
+    public async Task InvokeAsync(HttpContext context, IApiKeyService<TApiKey> apiKeyService, IConfiguration configuration)
     {
         var apiKeyHeaderName = configuration["HrCommonApi:ApiKeyName"]!;
         var apiKeys = configuration.GetSection("HrCommonApi:AcceptedApiKeys").Get<List<string>>()!;
