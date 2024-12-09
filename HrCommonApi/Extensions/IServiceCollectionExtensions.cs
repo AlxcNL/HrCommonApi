@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using HrCommonApi.Authorization;
-using HrCommonApi.Database;
 using HrCommonApi.Database.Models;
 using HrCommonApi.Database.Models.Base;
 using HrCommonApi.Profiles;
@@ -14,9 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Reflection;
 using System.Text;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace HrCommonApi.Extensions;
 
@@ -145,7 +142,7 @@ public static class IServiceCollectionExtensions
             throw new InvalidOperationException("The target namespace for the Services is not set. Expected configuration key: \"HrCommonApi:Namespaces:Services\"");
 
         // Services used by the frontend
-        services.AddServicesFromNamespace(targetServicesNamespace);
+        services.AddServicesFromNamespace<TDataContext>(targetServicesNamespace);
 
         // Add this libraries services
         if (jwtEnabled)
@@ -183,12 +180,11 @@ public static class IServiceCollectionExtensions
     /// <summary>
     /// Adds the services in the target namespace to the DI container.
     /// </summary>
-    public static IServiceCollection AddServicesFromNamespace(this IServiceCollection services, string targetNamespace)
+    public static IServiceCollection AddServicesFromNamespace<TDataContext>(this IServiceCollection services, string targetNamespace)
+        where TDataContext : DbContext
     {
         var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
-        Console.WriteLine($"Services Assembly: {assembly}");
-
-        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<CoreService<DbEntity>>(assembly, targetNamespace))
+        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<CoreService<DbEntity, TDataContext>>(assembly, targetNamespace))
         {
             Type? serviceType = ReflectionUtils.TryGetInterfaceForType(implementationType);
             if (serviceType == null)
@@ -206,8 +202,6 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddProfilesFromNamespace(this IServiceCollection services, string targetNamespace)
     {
         var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
-        Console.WriteLine($"Profiles Assembly: {assembly}");
-
         foreach (var type in ReflectionUtils.GetTypesInNamespaceImplementing<Profile>(assembly, targetNamespace))
         {
             services.AddAutoMapper(type);

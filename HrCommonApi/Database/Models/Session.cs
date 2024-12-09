@@ -1,5 +1,4 @@
 using HrCommonApi.Database.Models.Base;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HrCommonApi.Database.Models;

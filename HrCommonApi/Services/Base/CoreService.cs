@@ -1,14 +1,15 @@
 ﻿using HrCommonApi.Controllers.Requests;
-using HrCommonApi.Database;
 using HrCommonApi.Database.Models.Base;
 using HrCommonApi.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace HrCommonApi.Services.Base;
 
-public abstract class CoreService<TEntity>(DbContext context) : ICoreService<TEntity> where TEntity : DbEntity
+public abstract class CoreService<TEntity, TDataContext>(TDataContext context) : ICoreService<TEntity>
+    where TEntity : DbEntity
+    where TDataContext : DbContext
 {
-    protected DbContext Context { get; } = context;
+    protected TDataContext Context { get; } = context;
     protected DbSet<TEntity> ServiceTable => Context.Set<TEntity>()!;
 
     public virtual async Task<ServiceResult<List<TEntity>>> Get(Guid[]? ids = null)

@@ -1,5 +1,4 @@
 ﻿using HrCommonApi.Authorization;
-using HrCommonApi.Database;
 using HrCommonApi.Database.Models;
 using HrCommonApi.Enums;
 using HrCommonApi.Services.Base;
@@ -13,7 +12,8 @@ using System.Text;
 
 namespace HrCommonApi.Services;
 
-public class UserService<TUser, TDataContext>(DbContext context, IConfiguration configuration) : CoreService<TUser>(context), IUserService<TUser> where TUser : User
+public class UserService<TUser, TDataContext>(TDataContext context, IConfiguration configuration) : CoreService<TUser, TDataContext>(context), IUserService<TUser>
+    where TUser : User
     where TDataContext : DbContext
 {
     private IConfiguration Configuration { get; } = configuration;

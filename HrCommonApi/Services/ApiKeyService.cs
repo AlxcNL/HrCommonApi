@@ -1,19 +1,11 @@
-﻿using HrCommonApi.Authorization;
-using HrCommonApi.Database;
-using HrCommonApi.Database.Models;
+﻿using HrCommonApi.Database.Models;
 using HrCommonApi.Enums;
 using HrCommonApi.Services.Base;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace HrCommonApi.Services;
 
-public class ApiKeyService<TApiKey, TDataContext>(TDataContext context) : CoreService<TApiKey>(context), IApiKeyService<TApiKey> where TApiKey : ApiKey
+public class ApiKeyService<TApiKey, TDataContext>(TDataContext context) : CoreService<TApiKey, TDataContext>(context), IApiKeyService<TApiKey> where TApiKey : ApiKey
     where TDataContext : DbContext
 {
     public async Task<ServiceResult<TApiKey>> Authorize(string key)

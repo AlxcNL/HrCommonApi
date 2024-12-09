@@ -13,7 +13,7 @@ public static class IApplicationBuilderExtensions
     /// <summary>
     /// Adds common middleware and auth.
     /// </summary>
-    public static IApplicationBuilder AddHrCommonApiMiddleware(this IApplicationBuilder app, IConfiguration configuration) 
+    public static IApplicationBuilder AddHrCommonApiMiddleware(this IApplicationBuilder app, IConfiguration configuration)
         => AddHrCommonApiMiddleware<User, ApiKey>(app, configuration, false, false);
 
     public static IApplicationBuilder AddHrCommonJwtApiMiddleware<TUser>(this IApplicationBuilder app, IConfiguration configuration)

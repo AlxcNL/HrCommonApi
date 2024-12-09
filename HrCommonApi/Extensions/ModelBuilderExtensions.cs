@@ -3,7 +3,6 @@ using HrCommonApi.Database.Models.Base;
 using HrCommonApi.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System.Reflection;
 
 namespace HrCommonApi.Extensions;
 
@@ -48,8 +47,6 @@ public static class ModelBuilderExtensions
     public static ModelBuilder AddEntityModelsFromNamespace(this ModelBuilder modelBuilder, string targetNamespace)
     {
         var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
-        Console.WriteLine($"Models Assembly: {assembly}");
-
         foreach (var entityType in ReflectionUtils.GetTypesInNamespaceImplementing<DbEntity>(assembly, targetNamespace))
             modelBuilder.Entity(entityType);
 
@@ -79,19 +76,18 @@ public static class ModelBuilderExtensions
 
         if (jwtEnabled)
         {
-            modelBuilder.Entity<User>().HasKey(q => q.Id);
-            modelBuilder.Entity<User>().HasIndex(q => q.Username).IsUnique();
+            if (simpleUserEnabled)
+                modelBuilder.Entity<User>();
 
-            modelBuilder.Entity<Session>().HasKey(q => q.Id);
-            modelBuilder.Entity<Session>().HasIndex(q => q.AccessToken).IsUnique();
+            modelBuilder.Entity<Session>();
         }
 
         if (keyEnabled)
         {
-            modelBuilder.Entity<ApiKey>().HasKey(q => q.Id);
-            modelBuilder.Entity<ApiKey>().HasIndex(q => q.Key).IsUnique();
+            if (simpleKeyEnabled)
+                modelBuilder.Entity<ApiKey>();
 
-            modelBuilder.Entity<Right>().HasKey(q => q.Id);
+            modelBuilder.Entity<Right>();
         }
 
         return modelBuilder;

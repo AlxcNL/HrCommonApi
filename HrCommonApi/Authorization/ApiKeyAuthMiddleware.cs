@@ -1,6 +1,4 @@
-﻿using HrCommonApi.Database;
-using HrCommonApi.Database.Models;
-using HrCommonApi.Services;
+﻿using HrCommonApi.Database.Models;
 using HrCommonApi.Services.Base;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;

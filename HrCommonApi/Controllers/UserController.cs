@@ -19,10 +19,10 @@ namespace HrCommonApi.Controllers;
 /// </summary>
 [ApiController]
 public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<UserController<TUser, TCreate, TSimple, TUpdate>> logger, IMapper mapper, IUserService<TUser> service)
-    : CoreController<UserController<TUser, TCreate, TSimple, TUpdate>, IUserService<TUser>, TUser, TSimple, TCreate, TUpdate>(logger, mapper, service) 
-    where TUser : User 
-    where TCreate : CreateUserRequest 
-    where TSimple : SimpleUserResponse 
+    : CoreController<UserController<TUser, TCreate, TSimple, TUpdate>, IUserService<TUser>, TUser, TSimple, TCreate, TUpdate>(logger, mapper, service)
+    where TUser : User
+    where TCreate : CreateUserRequest
+    where TSimple : SimpleUserResponse
     where TUpdate : UpdateUserRequest
 {
     /// <summary>
@@ -31,7 +31,8 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     /// <param name="loginRequest">The model for the registration request containing the details of the <see cref="EntityType"/> to be created.</param>
     /// <returns>Returns a JWT token that can be used to authenticate users with.</returns>
     [HttpPost("Login")]
-    public virtual async Task<IActionResult> Login([FromBody] LoginUserRequest loginRequest) => await HandleRequestFlow(async () => {
+    public virtual async Task<IActionResult> Login([FromBody] LoginUserRequest loginRequest) => await HandleRequestFlow(async () =>
+    {
         var loginResult = await CoreService.Login(loginRequest.Username, loginRequest.Password);
         if (loginResult.Response != ServiceResponse.Success)
             return new ServiceResult<LoginResponse>(loginResult.Response, message: loginResult.Message, exception: loginResult.Exception);
@@ -60,7 +61,8 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     /// </summary>
     /// <returns>Returns a <see cref="SessionStateResponse"/> containing a <see cref="EntityType"/> with its active <see cref="Session"/>(s).</returns>
     [HttpGet("Session")]
-    public virtual async Task<IActionResult> Session() => await HandleRequestFlow(async () => {
+    public virtual async Task<IActionResult> Session() => await HandleRequestFlow(async () =>
+    {
         var userId = new Guid(GetFromClaim(ClaimTypes.NameIdentifier, Guid.Empty.ToString()));
         var activeSessions = await CoreService.GetUserSessions(userId);
         if (activeSessions == null)
