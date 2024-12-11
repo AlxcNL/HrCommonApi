@@ -14,8 +14,4 @@ public class Right : DbEntity
 
     [Column("value")]
     public string Value { get; set; } = string.Empty;
-
-    // Navigation properties
-    [ForeignKey("ApiKeyId")]
-    public virtual ApiKey ApiKey { get; set; } = null!;
 }

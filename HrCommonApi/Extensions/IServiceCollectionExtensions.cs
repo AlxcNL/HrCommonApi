@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -66,9 +67,19 @@ public static class IServiceCollectionExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration?["JwtAuthorization:Jwt:Issuer"],
-                    ValidAudience = configuration?["JwtAuthorization:Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtAuthorization:Jwt:Key"]!))
+                    ValidIssuer = configuration?["HrCommonApi:JwtAuthorization:Jwt:Issuer"],
+                    ValidAudience = configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"]!))
+                };
+                x.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        // Log the error here  
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<IServiceCollection>>();
+                        logger.LogError($"Authentication failed: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    }
                 };
             });
         }
@@ -94,11 +105,12 @@ public static class IServiceCollectionExtensions
                 // Define the Bearer token security scheme
                 q.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
                     In = ParameterLocation.Header,
+                    Description = "Please enter your Bearer token",
+                    Name = "Authorization",
                     Type = SecuritySchemeType.Http,
-                    Scheme = "Bearer"
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
                 });
 
                 securityRequirement.Add(new OpenApiSecurityScheme
@@ -116,11 +128,11 @@ public static class IServiceCollectionExtensions
                 // Define the API key security scheme
                 q.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
                 {
-                    Description = "API key needed to access the endpoints using the ApiKey scheme. Example: \"Authorization: x-api-key {key}\"",
+                    Description = "Please enter your API Key",
+                    Name = "Authorization",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey,
-                    Name = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"],
-                    Scheme = "ApiKey"
+                    Scheme = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"]
                 });
 
                 securityRequirement.Add(new OpenApiSecurityScheme
@@ -128,7 +140,7 @@ public static class IServiceCollectionExtensions
                     Reference = new OpenApiReference
                     {
                         Type = ReferenceType.SecurityScheme,
-                        Id = "ApiKey"
+                        Id = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"]
                     }
                 }, new string[] { });
             }

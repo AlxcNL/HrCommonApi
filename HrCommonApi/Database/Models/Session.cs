@@ -20,8 +20,4 @@ public class Session : DbEntity
 
     [Column("user_id")]
     public Guid UserId { get; set; }
-
-    // Navigation properties
-    [ForeignKey("UserId")]
-    public virtual User User { get; set; } = null!;
 }

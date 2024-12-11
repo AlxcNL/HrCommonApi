@@ -81,10 +81,10 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
     /// </summary>
     private string GenerateJwt(string username, Role role, Guid id, Guid jti, out DateTime accessExpiration, out DateTime renewExpiration)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["HrCommonApi:Jwt:Key"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:Jwt:TokenExpirationMinutes"]));
-        renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:Jwt:RefreshExpirationInMinutes"]));
+        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:TokenExpirationMinutes"]));
+        renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:RefreshExpirationInMinutes"]));
 
         var claims = new[]
         {
@@ -93,15 +93,16 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             new Claim(ClaimTypes.NameIdentifier, id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti.ToString())
         };
+        var claimsIdentity = new ClaimsIdentity(claims);
 
-        var token = new JwtSecurityToken(
-            issuer: Configuration["HrCommonApi:Jwt:Issuer"],
-            audience: Configuration["HrCommonApi:Jwt:Audience"],
-            claims: claims,
+        return new JwtSecurityTokenHandler().CreateEncodedJwt(
+            issuer: Configuration["HrCommonApi:JwtAuthorization:Jwt:Issuer"],
+            audience: Configuration["HrCommonApi:JwtAuthorization:Jwt:Audience"],
+            subject: claimsIdentity,
+            notBefore: DateTime.Now,
             expires: accessExpiration,
+            issuedAt: DateTime.Now,
             signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     private async Task<Session> RegisterSession(User user)

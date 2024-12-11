@@ -23,5 +23,6 @@ public class ApiKey : DbEntity
     public string Email { get; set; } = string.Empty;
 
     // Navigation properties
+    [ForeignKey("ApiKeyId")]
     public virtual ICollection<Right> Rights { get; set; } = new List<Right>();
 }

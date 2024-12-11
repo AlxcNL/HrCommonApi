@@ -13,8 +13,8 @@ public class ApiKeyAuthMiddleware<TApiKey>(RequestDelegate _next) where TApiKey 
 {
     public async Task InvokeAsync(HttpContext context, IApiKeyService<TApiKey> apiKeyService, IConfiguration configuration)
     {
-        var apiKeyHeaderName = configuration["HrCommonApi:ApiKeyName"]!;
-        var apiKeys = configuration.GetSection("HrCommonApi:AcceptedApiKeys").Get<List<string>>()!;
+        var apiKeyHeaderName = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"]!;
+        var apiKeys = configuration.GetSection("HrCommonApi:ApiKeyAuthorization:AcceptedApiKeys").Get<List<string>>()!;
 
         if (context.Request.Headers.TryGetValue(apiKeyHeaderName, out var extractedApiKey))
         {

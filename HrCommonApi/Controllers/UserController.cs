@@ -74,7 +74,7 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
             HasSession = HttpContext.User?.Identity?.IsAuthenticated ?? false,
             Username = GetFromClaim(ClaimTypes.Name, "Anonymous"),
             Role = GetFromClaim(ClaimTypes.Role, Role.None.ToString()).TryGetAsRole(),
-            ActiveSessions = Mapper.Map<List<UserSessionResponse>>(activeSessions)
+            ActiveSessions = Mapper.Map<List<UserSessionResponse>>(activeSessions.Result)
         });
     });
 
