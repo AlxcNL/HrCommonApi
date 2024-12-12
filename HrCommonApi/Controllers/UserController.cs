@@ -99,15 +99,6 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
         => await CreateToResponseModel<TSimple>(createRequest);
 
     /// <summary>
-    /// Returns the item that was created, if successfully.
-    /// </summary>
-    /// <param name="createRequest">The creation request related to this entity.</param>
-    /// <returns>A single simple response.</returns>
-    [HttpPost, AllowAnonymous]
-    public override async Task<IActionResult> Create(TCreate createRequest)
-        => await base.Create(createRequest);
-
-    /// <summary>
     /// Get the account details of specific <see cref="User"/>.
     /// This request can only be done by admins.
     /// </summary>

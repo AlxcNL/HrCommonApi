@@ -81,7 +81,11 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
     /// </summary>
     private string GenerateJwt(string username, Role role, Guid id, Guid jti, out DateTime accessExpiration, out DateTime renewExpiration)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"]!));
+        var issuer = Configuration?["HrCommonApi:JwtAuthorization:Jwt:Issuer"];
+        var audience = Configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"];
+        var jwtKey = Configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"];
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:TokenExpirationMinutes"]));
         renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:RefreshExpirationInMinutes"]));
@@ -96,11 +100,11 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
         var claimsIdentity = new ClaimsIdentity(claims);
 
         return new JwtSecurityTokenHandler().CreateEncodedJwt(
-            issuer: Configuration["HrCommonApi:JwtAuthorization:Jwt:Issuer"],
-            audience: Configuration["HrCommonApi:JwtAuthorization:Jwt:Audience"],
+            issuer: issuer,
+            audience: audience,
             subject: claimsIdentity,
-            notBefore: DateTime.Now,
             expires: accessExpiration,
+            notBefore: DateTime.Now,
             issuedAt: DateTime.Now,
             signingCredentials: creds);
     }

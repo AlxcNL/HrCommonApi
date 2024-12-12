@@ -79,7 +79,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// </summary>
     /// <param name="createRequest">The creation request related to this entity.</param>
     /// <returns>A single simple response.</returns>
-    [HttpPost, Authorize(Policy = "Admin")]
+    [HttpPost]
     public virtual async Task<IActionResult> Create(TCreateRequest createRequest)
         => await CreateToResponseModel<TSimpleResponse>(createRequest);
 
@@ -89,7 +89,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="id">The entity id to put the update on.</param>
     /// <param name="putRequest">The put update request related to this entity.</param>
     /// <returns>A single simple response.</returns>
-    [HttpPut("{id}"), Authorize(Policy = "Admin")]
+    [HttpPut("{id}")]
     public virtual async Task<IActionResult> Update(Guid id, [FromBody] TUpdateRequest putRequest)
         => await UpdateToResponseModel<TSimpleResponse>(id, putRequest);
 
@@ -99,7 +99,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="id">The entity id to patch the update on.</param>
     /// <param name="patchRequest">The patch update request related to this entity.</param>
     /// <returns>A single simple response.</returns>
-    [HttpPatch("{id}"), Authorize(Policy = "Admin")]
+    [HttpPatch("{id}")]
     public virtual async Task<IActionResult> Patch(Guid id, [FromBody] TUpdateRequest patchRequest)
         => await UpdateToResponseModel<TSimpleResponse>(id, patchRequest, true);
 
@@ -108,7 +108,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// </summary>
     /// <param name="id">The Guid for the item to be deleted.</param>
     /// <returns>A single simple response.</returns>
-    [HttpDelete("{id}"), Authorize(Policy = "Admin")]
+    [HttpDelete("{id}")]
     public virtual async Task<IActionResult> Delete(Guid id)
         => await DeleteToResponseModel<TSimpleResponse>(id);
 

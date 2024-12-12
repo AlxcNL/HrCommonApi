@@ -53,6 +53,12 @@ public static class IServiceCollectionExtensions
         // JWT or API keys, probably both
         if (jwtEnabled)
         {
+            var issuer = configuration?["HrCommonApi:JwtAuthorization:Jwt:Issuer"];
+            var audience = configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"];
+            var jwtKey = configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"];
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -67,15 +73,14 @@ public static class IServiceCollectionExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration?["HrCommonApi:JwtAuthorization:Jwt:Issuer"],
-                    ValidAudience = configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"]!))
+                    ValidIssuer = issuer,
+                    ValidAudience = audience,
+                    IssuerSigningKey = key
                 };
                 x.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        // Log the error here  
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<IServiceCollection>>();
                         logger.LogError($"Authentication failed: {context.Exception.Message}");
                         return Task.CompletedTask;
