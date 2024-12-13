@@ -50,6 +50,18 @@ public static class IServiceCollectionExtensions
         var simpleUserEnabled = typeof(TUser) == typeof(User);
         var simpleKeyEnabled = typeof(TKey) == typeof(ApiKey);
 
+        var apiKeys = configuration.GetSection("HrCommonApi:CorsAllowOrigins").Get<List<string>>();
+        if (apiKeys != null)
+        {
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(policy =>
+                {
+                    policy.WithOrigins(apiKeys.ToArray());
+                });
+            });
+        }
+
         // JWT or API keys, probably both
         if (jwtEnabled)
         {

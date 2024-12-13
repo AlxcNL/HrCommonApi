@@ -105,6 +105,7 @@ public class HrDataContext(DbContextOptions<HrDataContext> options, IConfigurati
 ## Configuration  
 To use the HrCommonApi library, your project must include a configuration file (e.g., `appsettings.json`). It contains the following options:
 
+- **CorsAllowOrigins** (_Required_): Put all frontend origins in that are allowed to connect.
 - **ConnectionString** (_Required_): Reference to the connection string used for the database context.
 - **Namespaces** (_Required_):
   - **Models** (_Required_): Namespace containing all entity models to be automatically loaded on startup.
@@ -123,6 +124,7 @@ To use the HrCommonApi library, your project must include a configuration file (
 ### Example:
 ```json
 "HrCommonApi": {
+  "CorsAllowOrigins": [ "http://localhost:5000", "http://localhost:3000" ],
   "ConnectionString": "DBConnection", // A reference to the connection string you want to use for the DB context.
   "Namespaces": {
     "Models": "", // The namespace containing all the entity models to automatically load on startup.

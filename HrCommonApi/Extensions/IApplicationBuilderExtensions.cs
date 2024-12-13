@@ -39,6 +39,8 @@ public static class IApplicationBuilderExtensions
             app.UseMiddleware<ApiKeyAuthMiddleware<TKey>>();
         }
 
+        app.UseCors();
+
         if (jwtEnabled || keyEnabled)
         {
             app.UseAuthentication();
