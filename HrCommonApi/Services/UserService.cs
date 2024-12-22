@@ -155,6 +155,8 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             if (ServiceTable.Any(q => q.Username == entity.Username))
                 return new ServiceResult<TUser>(ServiceResponse.BadRequest, message: "Username already exists!");
 
+            entity.Password = new PasswordManager().HashPassword(entity.Password!);
+
             return await base.Create(entity);
         }
         catch (Exception exception)

@@ -50,14 +50,16 @@ public static class IServiceCollectionExtensions
         var simpleUserEnabled = typeof(TUser) == typeof(User);
         var simpleKeyEnabled = typeof(TKey) == typeof(ApiKey);
 
-        var apiKeys = configuration.GetSection("HrCommonApi:CorsAllowOrigins").Get<List<string>>();
-        if (apiKeys != null)
+        var allowedOrigins = configuration.GetSection("HrCommonApi:CorsAllowOrigins").Get<List<string>>();
+        if (allowedOrigins != null)
         {
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
                 {
-                    policy.WithOrigins(apiKeys.ToArray());
+                    policy.WithOrigins(allowedOrigins.ToArray())
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
                 });
             });
         }
