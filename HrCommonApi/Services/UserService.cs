@@ -32,11 +32,7 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             if (!passwordManager.VerifyPassword(account.Password!, password))
                 return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Invalid password");
 
-            var existingSessions = await GetUserSessions(account.Id);
-            if (existingSessions.Response != ServiceResponse.Success)
-                return new ServiceResult<TUser>(existingSessions.Response, message: existingSessions.Message, exception: existingSessions.Exception);
-
-            if (existingSessions.Result == null || !existingSessions.Result.Any())
+            if (account.Sessions.Count == 0)
             {
                 var session = await RegisterSession(account); // Attempt to register a session
                 if (session == null)

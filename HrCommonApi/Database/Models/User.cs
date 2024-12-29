@@ -26,6 +26,5 @@ public class User : DbEntity
     public Role Role { get; set; }
 
     // Navigation properties
-    [ForeignKey("UserId")]
     public virtual ICollection<Session> Sessions { get; set; } = new List<Session>();
 }

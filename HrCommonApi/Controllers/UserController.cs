@@ -64,8 +64,11 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     public virtual async Task<IActionResult> Session() => await HandleRequestFlow(async () =>
     {
         var userId = new Guid(GetFromClaim(ClaimTypes.NameIdentifier, Guid.Empty.ToString()));
-        var activeSessions = await CoreService.GetUserSessions(userId);
-        if (activeSessions == null)
+        var activeSessionsResponse = await CoreService.GetUserSessions(userId);
+        if (activeSessionsResponse.Response != ServiceResponse.Success)
+            return new ServiceResult<SessionStateResponse>(activeSessionsResponse.Response, message: activeSessionsResponse.Message, exception: activeSessionsResponse.Exception);
+
+        if (activeSessionsResponse.Result!.Count == 0)
             return new ServiceResult<SessionStateResponse>(ServiceResponse.NotFound, message: "No active sessions found for this user.");
 
         return new ServiceResult<SessionStateResponse>(ServiceResponse.Success, new SessionStateResponse()
@@ -74,7 +77,7 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
             HasSession = HttpContext.User?.Identity?.IsAuthenticated ?? false,
             Username = GetFromClaim(ClaimTypes.Name, "Anonymous"),
             Role = GetFromClaim(ClaimTypes.Role, Role.None.ToString()).TryGetAsRole(),
-            ActiveSessions = Mapper.Map<List<UserSessionResponse>>(activeSessions.Result)
+            ActiveSessions = Mapper.Map<List<UserSessionResponse>>(activeSessionsResponse.Result)
         });
     });
 

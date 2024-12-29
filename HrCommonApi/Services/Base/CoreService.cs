@@ -54,13 +54,18 @@ public abstract class CoreService<TEntity, TDataContext>(TDataContext context) :
             entity.CreatedAt = DateTime.Now.ToUniversalTime();
             entity.UpdatedAt = DateTime.Now.ToUniversalTime();
 
-            var result = await ServiceTable.AddAsync(entity);
+            var addedEntity = await ServiceTable.AddAsync(entity);
             await Context.SaveChangesAsync();
 
-            if (result == null)
+            if (addedEntity == null)
                 return new ServiceResult<TEntity>(ServiceResponse.BadRequest, message: "Could not create entity");
 
-            return new ServiceResult<TEntity>(ServiceResponse.Success, result.Entity, message: "Entity created");
+            // Explicitly load navigation properties if needed
+            foreach (var navigation in Context.Entry(addedEntity.Entity).Navigations)
+                if (!navigation.IsLoaded)
+                    await navigation.LoadAsync();
+
+            return new ServiceResult<TEntity>(ServiceResponse.Success, addedEntity.Entity, message: "Entity created");
         }
         catch (Exception exception)
         {
