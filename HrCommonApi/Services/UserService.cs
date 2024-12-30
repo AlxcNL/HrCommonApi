@@ -5,6 +5,7 @@ using HrCommonApi.Services.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -32,7 +33,8 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             if (!passwordManager.VerifyPassword(account.Password!, password))
                 return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Invalid password");
 
-            if (account.Sessions.Count == 0)
+            var sessions = await GetActiveSessions(account.Id);
+            if (sessions.Count == 0)
             {
                 var session = await RegisterSession(account); // Attempt to register a session
                 if (session == null)
@@ -60,8 +62,7 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             if (!ServiceTable.Any(u => u.Id == userId))
                 return new ServiceResult<List<Session>>(ServiceResponse.NotFound, message: "User not found");
 
-            var now = DateTime.Now.ToUniversalTime();
-            var sessions = await Sessions.Where(q => q.UserId == userId && q.AccessExpiresAt >= now).ToListAsync();
+            var sessions = await GetActiveSessions(userId);
             var message = sessions.Count == 0 ? "No active sessions found" : $"Found {sessions.Count} active sessions";
 
             return new ServiceResult<List<Session>>(ServiceResponse.Success, sessions, message: message);
@@ -71,6 +72,9 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             return new ServiceResult<List<Session>>(ServiceResponse.Exception, exception: exception, message: exception.Message);
         }
     }
+
+    public async Task<List<Session>> GetActiveSessions(Guid userId) =>
+        await Sessions.Where(q => q.UserId == userId && q.AccessExpiresAt >= DateTime.Now.ToUniversalTime()).ToListAsync();
 
     /// <summary>
     /// Generates a JWT token for the user. Also sets the expiration date for the token and the refresh token.
