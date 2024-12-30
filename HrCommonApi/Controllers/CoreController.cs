@@ -71,7 +71,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="id">Provide the Guid to use for the item retrieval.</param>
     /// <returns>A single simple response.</returns>
     [HttpGet("{id}")]
-    public virtual async Task<IActionResult> GetById(Guid id)
+    public virtual async Task<IActionResult> GetById([FromRoute] Guid id)
         => await GetByIdToResponseModel<TSimpleResponse>(id);
 
     /// <summary>
@@ -80,7 +80,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="createRequest">The creation request related to this entity.</param>
     /// <returns>A single simple response.</returns>
     [HttpPost]
-    public virtual async Task<IActionResult> Create(TCreateRequest createRequest)
+    public virtual async Task<IActionResult> Create([FromBody] TCreateRequest createRequest)
         => await CreateToResponseModel<TSimpleResponse>(createRequest);
 
     /// <summary>
@@ -90,7 +90,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="putRequest">The put update request related to this entity.</param>
     /// <returns>A single simple response.</returns>
     [HttpPut("{id}")]
-    public virtual async Task<IActionResult> Update(Guid id, [FromBody] TUpdateRequest putRequest)
+    public virtual async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] TUpdateRequest putRequest)
         => await UpdateToResponseModel<TSimpleResponse>(id, putRequest);
 
     /// <summary>
@@ -100,7 +100,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="patchRequest">The patch update request related to this entity.</param>
     /// <returns>A single simple response.</returns>
     [HttpPatch("{id}")]
-    public virtual async Task<IActionResult> Patch(Guid id, [FromBody] TUpdateRequest patchRequest)
+    public virtual async Task<IActionResult> Patch([FromRoute] Guid id, [FromBody] TUpdateRequest patchRequest)
         => await UpdateToResponseModel<TSimpleResponse>(id, patchRequest, true);
 
     /// <summary>
@@ -109,7 +109,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <param name="id">The Guid for the item to be deleted.</param>
     /// <returns>A single simple response.</returns>
     [HttpDelete("{id}")]
-    public virtual async Task<IActionResult> Delete(Guid id)
+    public virtual async Task<IActionResult> Delete([FromRoute] Guid id)
         => await DeleteToResponseModel<TSimpleResponse>(id);
 
     // Default plumbing for handling requests and responses
