@@ -121,7 +121,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <typeparam name="TResultType">The result type used by the ServiceResult.</typeparam>
     /// <param name="ServiceAction">The action to be executed. This usually involves an call to the Service.</param>
     private async Task<IActionResult> HandleRequestFlow<TResponseModel>(
-        Func<Task<ServiceResult<TResponseModel>>> serviceAction,
+        Func<Task<ServiceResponse<TResponseModel>>> serviceAction,
         Func<TResponseModel, Task<OkObjectResult>> resultAction
     ) where TResponseModel : class
     {
@@ -130,14 +130,14 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
 
         var serviceResponse = await serviceAction();
 
-        Logger.Log((LogLevel)(int)serviceResponse.Response, message: $"{serviceResponse.Response} | {serviceResponse.Message}", exception: serviceResponse.Exception);
+        Logger.Log((LogLevel)(int)serviceResponse.Code, message: $"{serviceResponse.Code} | {serviceResponse.Message}", exception: serviceResponse.Exception);
 
-        return serviceResponse.Response switch
+        return serviceResponse.Code switch
         {
-            ServiceResponse.NotFound => NotFound(serviceResponse.Message ?? string.Empty),
-            ServiceResponse.BadRequest => BadRequest(serviceResponse.Message ?? string.Empty),
-            ServiceResponse.Exception => StatusCode(500, serviceResponse.Exception?.Message ?? string.Empty),
-            ServiceResponse.NotImplemented => StatusCode(501, serviceResponse.Message ?? string.Empty),
+            ServiceCode.NotFound => NotFound(serviceResponse.Message ?? string.Empty),
+            ServiceCode.BadRequest => BadRequest(serviceResponse.Message ?? string.Empty),
+            ServiceCode.Exception => StatusCode(500, serviceResponse.Exception?.Message ?? string.Empty),
+            ServiceCode.NotImplemented => StatusCode(501, serviceResponse.Message ?? string.Empty),
             _ => await resultAction(serviceResponse.Result!),
         };
     }
@@ -149,7 +149,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <typeparam name="TResultType">The type of result the Service action responds with.</typeparam>
     /// <param name="serviceAction">The action that will result in the request response.</param>
     /// <returns>The IActionResult that will be returned to the client. Task is awaited with Task.FromResult to force it as async.</returns>
-    protected async Task<IActionResult> HandleRequestFlow<TResponseModel, TResultType>(Func<Task<ServiceResult<TResultType>>> serviceAction) where TResultType : class
+    protected async Task<IActionResult> HandleRequestFlow<TResponseModel, TResultType>(Func<Task<ServiceResponse<TResultType>>> serviceAction) where TResultType : class
         => await HandleRequestFlow(serviceAction, async (result) => await Task.FromResult(Ok(Mapper.Map<TResponseModel>(result))));
 
     /// <summary>
@@ -158,7 +158,7 @@ public abstract class CoreController<TController, TService, TEntity, TSimpleResp
     /// <typeparam name="TResponseModel">The Response model that will be returned.</typeparam>
     /// <param name="serviceAction">The action that will result in a pre-mapped response.</param>
     /// <returns>The IActionResult that will be returned to the client. Task is awaited with Task.FromResult to force it as async.</returns>
-    protected async Task<IActionResult> HandleRequestFlow<TResponseModel>(Func<Task<ServiceResult<TResponseModel>>> serviceAction) where TResponseModel : class
+    protected async Task<IActionResult> HandleRequestFlow<TResponseModel>(Func<Task<ServiceResponse<TResponseModel>>> serviceAction) where TResponseModel : class
         => await HandleRequestFlow(serviceAction, async (result) => await Task.FromResult(Ok(result)));
 
     /// <summary>

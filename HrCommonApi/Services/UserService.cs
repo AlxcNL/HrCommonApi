@@ -21,56 +21,56 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
     private IConfiguration Configuration { get; } = configuration;
     private DbSet<Session> Sessions => Context.Set<Session>();
 
-    public async Task<ServiceResult<TUser>> Login(string username, string password)
+    public async Task<ServiceResponse<TUser>> Login(string username, string password)
     {
         try
         {
             var account = await ServiceTable.FirstOrDefaultAsync(q => q.Username == username);
             if (account == null)
-                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Account not found");
+                return new ServiceResponse<TUser>(ServiceCode.NotFound, message: "Account not found");
 
             var passwordManager = new PasswordManager();
 
             if (!passwordManager.VerifyPassword(account.Password!, password))
-                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "Invalid password");
+                return new ServiceResponse<TUser>(ServiceCode.NotFound, message: "Invalid password");
 
             var sessions = await GetActiveSessions(account.Id);
             if (sessions.Count == 0)
             {
                 var session = await RegisterSession(account); // Attempt to register a session
                 if (session == null)
-                    return new ServiceResult<TUser>(ServiceResponse.Exception, message: "Failed to register session");
+                    return new ServiceResponse<TUser>(ServiceCode.Exception, message: "Failed to register session");
 
                 // Generate a session and use the expiration date generated to set the session expiration in the database
                 var jwt = GenerateJwt(username, account.Role, account.Id, session.Id, out var accessExpiration, out var renewExpiration);
                 session = await SetJwtTokenAndExpiration(session.Id, jwt, GenerateRefreshToken(), accessExpiration, renewExpiration);
                 if (session == null)
-                    return new ServiceResult<TUser>(ServiceResponse.Exception, message: "Failed to set session");
+                    return new ServiceResponse<TUser>(ServiceCode.Exception, message: "Failed to set session");
             }
 
-            return new ServiceResult<TUser>(ServiceResponse.Success, account, message: "Successfully authorized");
+            return new ServiceResponse<TUser>(ServiceCode.Success, account, message: "Successfully authorized");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TUser>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public async Task<ServiceResult<List<Session>>> GetUserSessions(Guid userId)
+    public async Task<ServiceResponse<List<Session>>> GetUserSessions(Guid userId)
     {
         try
         {
             if (!ServiceTable.Any(u => u.Id == userId))
-                return new ServiceResult<List<Session>>(ServiceResponse.NotFound, message: "User not found");
+                return new ServiceResponse<List<Session>>(ServiceCode.NotFound, message: "User not found");
 
             var sessions = await GetActiveSessions(userId);
             var message = sessions.Count == 0 ? "No active sessions found" : $"Found {sessions.Count} active sessions";
 
-            return new ServiceResult<List<Session>>(ServiceResponse.Success, sessions, message: message);
+            return new ServiceResponse<List<Session>>(ServiceCode.Success, sessions, message: message);
         }
         catch (Exception exception)
         {
-            return new ServiceResult<List<Session>>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<List<Session>>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
@@ -149,12 +149,12 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
         return Convert.ToBase64String(randomNumber);
     }
 
-    public override async Task<ServiceResult<TUser>> Create(TUser entity)
+    public override async Task<ServiceResponse<TUser>> Create(TUser entity)
     {
         try
         {
             if (ServiceTable.Any(q => q.Username == entity.Username))
-                return new ServiceResult<TUser>(ServiceResponse.BadRequest, message: "Username already exists!");
+                return new ServiceResponse<TUser>(ServiceCode.BadRequest, message: "Username already exists!");
 
             entity.Password = new PasswordManager().HashPassword(entity.Password!);
 
@@ -162,26 +162,26 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TUser>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public virtual async Task<ServiceResult<TUser>> UpdateRole(Guid userId, Role role)
+    public virtual async Task<ServiceResponse<TUser>> UpdateRole(Guid userId, Role role)
     {
         try
         {
             var user = await ServiceTable.FindAsync(userId);
 
             if (user == null)
-                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "User not found");
+                return new ServiceResponse<TUser>(ServiceCode.NotFound, message: "User not found");
 
             user.Role = role;
 
-            return new ServiceResult<TUser>(ServiceResponse.Success, user, message: "Role updated for user");
+            return new ServiceResponse<TUser>(ServiceCode.Success, user, message: "Role updated for user");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TUser>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 }

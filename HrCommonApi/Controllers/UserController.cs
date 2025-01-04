@@ -34,13 +34,13 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     public virtual async Task<IActionResult> Login([FromBody] LoginUserRequest loginRequest) => await HandleRequestFlow(async () =>
     {
         var loginResult = await CoreService.Login(loginRequest.Username, loginRequest.Password);
-        if (loginResult.Response != ServiceResponse.Success)
-            return new ServiceResult<LoginResponse>(loginResult.Response, message: loginResult.Message, exception: loginResult.Exception);
+        if (loginResult.Code != ServiceCode.Success)
+            return new ServiceResponse<LoginResponse>(loginResult.Code, message: loginResult.Message, exception: loginResult.Exception);
 
         var now = DateTime.Now.ToUniversalTime();
         var session = loginResult.Result!.Sessions.First(q => q.AccessExpiresAt >= now);
 
-        return new ServiceResult<LoginResponse>(ServiceResponse.Success, new LoginResponse()
+        return new ServiceResponse<LoginResponse>(ServiceCode.Success, new LoginResponse()
         {
             Id = loginResult.Result.Id,
             FirstName = loginResult.Result.FirstName,
@@ -65,13 +65,13 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     {
         var userId = new Guid(GetFromClaim(ClaimTypes.NameIdentifier, Guid.Empty.ToString()));
         var activeSessionsResponse = await CoreService.GetUserSessions(userId);
-        if (activeSessionsResponse.Response != ServiceResponse.Success)
-            return new ServiceResult<SessionStateResponse>(activeSessionsResponse.Response, message: activeSessionsResponse.Message, exception: activeSessionsResponse.Exception);
+        if (activeSessionsResponse.Code != ServiceCode.Success)
+            return new ServiceResponse<SessionStateResponse>(activeSessionsResponse.Code, message: activeSessionsResponse.Message, exception: activeSessionsResponse.Exception);
 
         if (activeSessionsResponse.Result!.Count == 0)
-            return new ServiceResult<SessionStateResponse>(ServiceResponse.NotFound, message: "No active sessions found for this user.");
+            return new ServiceResponse<SessionStateResponse>(ServiceCode.NotFound, message: "No active sessions found for this user.");
 
-        return new ServiceResult<SessionStateResponse>(ServiceResponse.Success, new SessionStateResponse()
+        return new ServiceResponse<SessionStateResponse>(ServiceCode.Success, new SessionStateResponse()
         {
             Id = userId,
             HasSession = HttpContext.User?.Identity?.IsAuthenticated ?? false,

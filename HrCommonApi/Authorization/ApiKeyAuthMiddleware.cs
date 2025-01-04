@@ -26,7 +26,7 @@ public class ApiKeyAuthMiddleware<TApiKey>(RequestDelegate _next) where TApiKey 
             }
 
             var response = await apiKeyService.Authorize(extractedApiKey);
-            if (response.Response != Enums.ServiceResponse.Success)
+            if (response.Code != Enums.ServiceCode.Success)
             {
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsync(response.Message);

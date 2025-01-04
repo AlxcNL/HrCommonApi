@@ -12,42 +12,42 @@ public abstract class CoreService<TEntity, TDataContext>(TDataContext context) :
     protected TDataContext Context { get; } = context;
     protected DbSet<TEntity> ServiceTable => Context.Set<TEntity>()!;
 
-    public virtual async Task<ServiceResult<List<TEntity>>> Get(Guid[]? ids = null)
+    public virtual async Task<ServiceResponse<List<TEntity>>> Get(Guid[]? ids = null)
     {
         try
         {
             if (ids == null)
-                return new ServiceResult<List<TEntity>>(ServiceResponse.Success, await ServiceTable.ToListAsync(), message: $"Result set contains {ServiceTable.Count()} items");
+                return new ServiceResponse<List<TEntity>>(ServiceCode.Success, await ServiceTable.ToListAsync(), message: $"Result set contains {ServiceTable.Count()} items");
 
             var resultSet = await ServiceTable.Where(q => ids.Contains(q.Id)).ToListAsync();
             if (!resultSet.Any())
-                return new ServiceResult<List<TEntity>>(ServiceResponse.NotFound, message: $"No results found for id's: {string.Join(',', ids)}");
+                return new ServiceResponse<List<TEntity>>(ServiceCode.NotFound, message: $"No results found for id's: {string.Join(',', ids)}");
 
-            return new ServiceResult<List<TEntity>>(ServiceResponse.Success, resultSet, message: $"Result set contains {resultSet.Count} items");
+            return new ServiceResponse<List<TEntity>>(ServiceCode.Success, resultSet, message: $"Result set contains {resultSet.Count} items");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<List<TEntity>>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<List<TEntity>>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public virtual async Task<ServiceResult<TEntity>> Get(Guid id)
+    public virtual async Task<ServiceResponse<TEntity>> Get(Guid id)
     {
         try
         {
             var result = await ServiceTable.FindAsync(id);
             if (result == null)
-                return new ServiceResult<TEntity>(ServiceResponse.NotFound, message: $"No results found for id: {id}");
+                return new ServiceResponse<TEntity>(ServiceCode.NotFound, message: $"No results found for id: {id}");
 
-            return new ServiceResult<TEntity>(ServiceResponse.Success, result, message: $"Result item with id: {id}");
+            return new ServiceResponse<TEntity>(ServiceCode.Success, result, message: $"Result item with id: {id}");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TEntity>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TEntity>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public virtual async Task<ServiceResult<TEntity>> Create(TEntity entity)
+    public virtual async Task<ServiceResponse<TEntity>> Create(TEntity entity)
     {
         try
         {
@@ -58,28 +58,28 @@ public abstract class CoreService<TEntity, TDataContext>(TDataContext context) :
             await Context.SaveChangesAsync();
 
             if (addedEntity == null)
-                return new ServiceResult<TEntity>(ServiceResponse.BadRequest, message: "Could not create entity");
+                return new ServiceResponse<TEntity>(ServiceCode.BadRequest, message: "Could not create entity");
 
             // Explicitly load navigation properties if needed
             foreach (var navigation in Context.Entry(addedEntity.Entity).Navigations)
                 if (!navigation.IsLoaded)
                     await navigation.LoadAsync();
 
-            return new ServiceResult<TEntity>(ServiceResponse.Success, addedEntity.Entity, message: "Entity created");
+            return new ServiceResponse<TEntity>(ServiceCode.Success, addedEntity.Entity, message: "Entity created");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TEntity>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TEntity>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public virtual async Task<ServiceResult<TEntity>> Update(Guid id, IRequest updateModel, bool isPatch = false)
+    public virtual async Task<ServiceResponse<TEntity>> Update(Guid id, IRequest updateModel, bool isPatch = false)
     {
         try
         {
             var entity = await ServiceTable.FindAsync(id);
             if (entity == null)
-                return new ServiceResult<TEntity>(ServiceResponse.NotFound, message: $"Could not find {typeof(TEntity)} with id: {id}");
+                return new ServiceResponse<TEntity>(ServiceCode.NotFound, message: $"Could not find {typeof(TEntity)} with id: {id}");
 
             var objType = updateModel.GetType();
             var updateProperties = objType.GetProperties();
@@ -108,35 +108,35 @@ public abstract class CoreService<TEntity, TDataContext>(TDataContext context) :
             }
 
             if (updates == 0)
-                return new ServiceResult<TEntity>(ServiceResponse.BadRequest, message: $"No updates found for {typeof(TEntity)} with id: {id}");
+                return new ServiceResponse<TEntity>(ServiceCode.BadRequest, message: $"No updates found for {typeof(TEntity)} with id: {id}");
 
             entity.UpdatedAt = DateTime.Now.ToUniversalTime();
             var changesSaved = await Context.SaveChangesAsync();
 
-            return new ServiceResult<TEntity>(ServiceResponse.Success, entity, message: $"Updated {typeof(TEntity)} with id: {id}, saved {changesSaved} updates, {updates} expected");
+            return new ServiceResponse<TEntity>(ServiceCode.Success, entity, message: $"Updated {typeof(TEntity)} with id: {id}, saved {changesSaved} updates, {updates} expected");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TEntity>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TEntity>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 
-    public virtual async Task<ServiceResult<TEntity>> Delete(Guid id)
+    public virtual async Task<ServiceResponse<TEntity>> Delete(Guid id)
     {
         try
         {
             var entity = await ServiceTable.FindAsync(id);
             if (entity == null)
-                return new ServiceResult<TEntity>(ServiceResponse.NotFound, message: $"Could not find {typeof(TEntity)} with id: {id}");
+                return new ServiceResponse<TEntity>(ServiceCode.NotFound, message: $"Could not find {typeof(TEntity)} with id: {id}");
 
             ServiceTable.Remove(entity);
             await Context.SaveChangesAsync();
 
-            return new ServiceResult<TEntity>(ServiceResponse.Success, entity, message: $"Deleted {typeof(TEntity)} with id: {id}");
+            return new ServiceResponse<TEntity>(ServiceCode.Success, entity, message: $"Deleted {typeof(TEntity)} with id: {id}");
         }
         catch (Exception exception)
         {
-            return new ServiceResult<TEntity>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+            return new ServiceResponse<TEntity>(ServiceCode.Exception, exception: exception, message: exception.Message);
         }
     }
 }

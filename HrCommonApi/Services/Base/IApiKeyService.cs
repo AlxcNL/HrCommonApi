@@ -4,5 +4,5 @@ namespace HrCommonApi.Services.Base;
 
 public interface IApiKeyService<TApiKey> where TApiKey : ApiKey
 {
-    Task<ServiceResult<TApiKey>> Authorize(string key);
+    Task<ServiceResponse<TApiKey>> Authorize(string key);
 }
