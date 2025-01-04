@@ -87,8 +87,7 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     /// </summary>
     /// <param name="userId">The Guid representing the <see cref="EntityType"/>.</param>
     /// <returns>Returns a list of <see cref="SessionResponse"/> containing the user's <see cref="Session"/>(s).</returns>
-    [Authorize(Policy = "Admin")]
-    [HttpGet("{userId}/Session")]
+    [HttpGet("{userId}/Session"), Authorize(Policy = "Admin")]
     public virtual async Task<IActionResult> GetUserSessions(Guid userId)
         => await HandleRequestFlow<List<UserSessionResponse>, List<Session>>(() => CoreService.GetUserSessions(userId));
 
@@ -107,8 +106,18 @@ public abstract class UserController<TUser, TCreate, TSimple, TUpdate>(ILogger<U
     /// </summary>
     /// <param name="userId">The Guid representing the <see cref="User"/>.</param>
     /// <returns>Returns an <see cref="ExtendedUserResponse"/> containing the <see cref="User"/>'s details and its the related objects.</returns>
-    [Authorize(Policy = "Admin")]
-    [HttpGet("{userId}/Details")]
+    [HttpGet("{userId}/Details"), Authorize(Policy = "Admin")]
     public async Task<IActionResult> GetUserDetails(Guid userId)
         => await HandleRequestFlow<ExtendedUserResponse, TUser>(() => CoreService.Get(userId));
+
+    /// <summary>
+    /// Set the role of a <see cref="User"/>.
+    /// This request can only be done by admins.
+    /// </summary>
+    /// <param name="userId">The Guid representing the <see cref="User"/>.</param>
+    /// <param name="role">The role to be set.</param>
+    /// <returns>Returns an <see cref="ExtendedUserResponse"/> containing the <see cref="User"/>'s details and its the related objects.</returns>
+    [HttpPost("{userId}/Role"), Authorize(Policy = "Admin")]
+    public async Task<IActionResult> SetUserRole(Guid userId, Role role)
+        => await HandleRequestFlow<ExtendedUserResponse, TUser>(() => CoreService.UpdateRole(userId, role));
 }

@@ -2,6 +2,7 @@
 using HrCommonApi.Database.Models;
 using HrCommonApi.Enums;
 using HrCommonApi.Services.Base;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -158,6 +159,25 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
             entity.Password = new PasswordManager().HashPassword(entity.Password!);
 
             return await base.Create(entity);
+        }
+        catch (Exception exception)
+        {
+            return new ServiceResult<TUser>(ServiceResponse.Exception, exception: exception, message: exception.Message);
+        }
+    }
+
+    public virtual async Task<ServiceResult<TUser>> UpdateRole(Guid userId, Role role)
+    {
+        try
+        {
+            var user = await ServiceTable.FindAsync(userId);
+
+            if (user == null)
+                return new ServiceResult<TUser>(ServiceResponse.NotFound, message: "User not found");
+
+            user.Role = role;
+
+            return new ServiceResult<TUser>(ServiceResponse.Success, user, message: "Role updated for user");
         }
         catch (Exception exception)
         {
