@@ -176,6 +176,7 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
                 return new ServiceResponse<TUser>(ServiceCode.NotFound, message: "User not found");
 
             user.Role = role;
+            await Context.SaveChangesAsync();
 
             return new ServiceResponse<TUser>(ServiceCode.Success, user, message: "Role updated for user");
         }

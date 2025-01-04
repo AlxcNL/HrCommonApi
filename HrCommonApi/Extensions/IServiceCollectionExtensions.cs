@@ -24,26 +24,30 @@ namespace HrCommonApi.Extensions;
 public static class IServiceCollectionExtensions
 {
 
-    public static IServiceCollection AddHrCommonApiServices<TDataContext>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+    public static IServiceCollection AddHrCommonApiServices<TDataContext, TCoreService>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
         where TDataContext : DbContext
-        => services.AddHrCommonApiServices<TDataContext, User, ApiKey>(configuration, configureCustomAuthorization, false, false);
+        where TCoreService : CoreService<DbEntity, TDataContext>
+        => services.AddHrCommonApiServices<TDataContext, TCoreService, User, ApiKey>(configuration, configureCustomAuthorization, false, false);
 
-    public static IServiceCollection AddHrCommonJwtApiServices<TDataContext, TUser>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+    public static IServiceCollection AddHrCommonJwtApiServices<TDataContext, TCoreService, TUser>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
         where TDataContext : DbContext
+        where TCoreService : CoreService<DbEntity, TDataContext>
         where TUser : User
-        => services.AddHrCommonApiServices<TDataContext, TUser, ApiKey>(configuration, configureCustomAuthorization, true, false);
+        => services.AddHrCommonApiServices<TDataContext, TCoreService, TUser, ApiKey>(configuration, configureCustomAuthorization, true, false);
 
-    public static IServiceCollection AddHrCommonKeyApiServices<TDataContext, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
+    public static IServiceCollection AddHrCommonKeyApiServices<TDataContext, TCoreService, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null)
         where TDataContext : DbContext
+        where TCoreService : CoreService<DbEntity, TDataContext>
         where TKey : ApiKey
-        => services.AddHrCommonApiServices<TDataContext, User, TKey>(configuration, configureCustomAuthorization, false, true);
+        => services.AddHrCommonApiServices<TDataContext, TCoreService, User, TKey>(configuration, configureCustomAuthorization, false, true);
 
     /// <summary>
     /// Adds the services, profiles, and database context to the DI container.
     /// </summary>
     /// <exception cref="InvalidOperationException">Returns an InvalidOperationException if the configuration is improper.</exception>
-    public static IServiceCollection AddHrCommonApiServices<TDataContext, TUser, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null, bool jwtEnabled = true, bool keyEnabled = true)
+    public static IServiceCollection AddHrCommonApiServices<TDataContext, TCoreService, TUser, TKey>(this IServiceCollection services, IConfiguration configuration, Action<AuthorizationOptions>? configureCustomAuthorization = null, bool jwtEnabled = true, bool keyEnabled = true)
         where TDataContext : DbContext
+        where TCoreService : CoreService<DbEntity, TDataContext>
         where TUser : User
         where TKey : ApiKey
     {
@@ -173,7 +177,7 @@ public static class IServiceCollectionExtensions
             throw new InvalidOperationException("The target namespace for the Services is not set. Expected configuration key: \"HrCommonApi:Namespaces:Services\"");
 
         // Services used by the frontend
-        services.AddServicesFromNamespace<TDataContext>(targetServicesNamespace);
+        services.AddServicesFromNamespace<TDataContext, TCoreService>(targetServicesNamespace);
 
         // Add this libraries services
         if (jwtEnabled)
@@ -211,11 +215,12 @@ public static class IServiceCollectionExtensions
     /// <summary>
     /// Adds the services in the target namespace to the DI container.
     /// </summary>
-    public static IServiceCollection AddServicesFromNamespace<TDataContext>(this IServiceCollection services, string targetNamespace)
+    public static IServiceCollection AddServicesFromNamespace<TDataContext, TCoreService>(this IServiceCollection services, string targetNamespace)
         where TDataContext : DbContext
+        where TCoreService : CoreService<DbEntity, TDataContext>
     {
         var assembly = AppDomain.CurrentDomain.GetAssemblies().First(q => q.FullName != null && q.FullName.Contains(targetNamespace.Split('.')[0]));
-        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<CoreService<DbEntity, TDataContext>>(assembly, targetNamespace))
+        foreach (Type implementationType in ReflectionUtils.GetTypesInNamespaceImplementing<TCoreService>(assembly, targetNamespace))
         {
             Type? serviceType = ReflectionUtils.TryGetInterfaceForType(implementationType);
             if (serviceType == null)
