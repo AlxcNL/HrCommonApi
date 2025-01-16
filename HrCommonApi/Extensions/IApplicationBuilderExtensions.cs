@@ -34,11 +34,6 @@ public static class IApplicationBuilderExtensions
         var simpleUserEnabled = typeof(TUser) == typeof(User);
         var simpleKeyEnabled = typeof(TKey) == typeof(ApiKey);
 
-        if (keyEnabled)
-        {
-            app.UseMiddleware<ApiKeyAuthMiddleware<TKey>>();
-        }
-
         app.UseCors();
 
         if (jwtEnabled || keyEnabled)

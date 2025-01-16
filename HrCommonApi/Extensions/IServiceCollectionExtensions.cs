@@ -153,21 +153,20 @@ public static class IServiceCollectionExtensions
             if (keyEnabled)
             {
                 // Define the API key security scheme
+                var apiKeyName = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"];
                 q.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
                 {
                     Description = "Please enter your API Key",
-                    Name = "Authorization",
+                    Name = apiKeyName,
                     In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"]
+                    Type = SecuritySchemeType.ApiKey
                 });
-
                 securityRequirement.Add(new OpenApiSecurityScheme
                 {
                     Reference = new OpenApiReference
                     {
                         Type = ReferenceType.SecurityScheme,
-                        Id = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"]
+                        Id = "ApiKey"
                     }
                 }, new string[] { });
             }
