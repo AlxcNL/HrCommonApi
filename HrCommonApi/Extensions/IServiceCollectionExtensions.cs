@@ -6,6 +6,7 @@ using HrCommonApi.Profiles;
 using HrCommonApi.Services;
 using HrCommonApi.Services.Base;
 using HrCommonApi.Utils;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -107,7 +108,10 @@ public static class IServiceCollectionExtensions
             });
         }
 
-        if (jwtEnabled || keyEnabled)
+        if (keyEnabled)
+            services.AddAuthentication("ApiKey").AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler<TKey>>("ApiKey", null);
+
+        if (keyEnabled || jwtEnabled)
         {
             services.AddAuthorization(HrCommonApiPolicies.ConfigurePolicies);
             if (configureCustomAuthorization != null)
