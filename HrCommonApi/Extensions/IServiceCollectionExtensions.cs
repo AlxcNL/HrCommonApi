@@ -200,7 +200,10 @@ public static class IServiceCollectionExtensions
         if (jwtEnabled && simpleUserEnabled)
             services.AddAutoMapper(typeof(UserProfiles));
         if (keyEnabled && simpleKeyEnabled)
+        {
+            services.AddTransient<IApiKeyValidation, ApiKeyValidation>();
             services.AddAutoMapper(typeof(ApiKeyProfiles));
+        }
 
         // Database context
         var targetConnectionString = configuration?["HrCommonApi:ConnectionString"] ?? null;
