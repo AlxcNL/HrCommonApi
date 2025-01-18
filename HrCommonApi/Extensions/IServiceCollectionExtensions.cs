@@ -76,7 +76,7 @@ public static class IServiceCollectionExtensions
             var audience = configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"];
             var jwtKey = configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"];
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!));
 
             services.AddAuthentication(x =>
             {
@@ -153,7 +153,7 @@ public static class IServiceCollectionExtensions
             if (keyEnabled)
             {
                 // Define the API key security scheme
-                var apiKeyName = configuration["HrCommonApi:ApiKeyAuthorization:ApiKeyName"];
+                var apiKeyName = configuration?["HrCommonApi:ApiKeyAuthorization:ApiKeyName"];
                 q.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
                 {
                     Description = "Please enter your API Key",

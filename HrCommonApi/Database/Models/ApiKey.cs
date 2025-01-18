@@ -23,5 +23,5 @@ public class ApiKey : DbEntity
     public string Email { get; set; } = string.Empty;
 
     // Navigation properties
-    public virtual ICollection<Right> Rights { get; set; } = new List<Right>();
+    public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
 }

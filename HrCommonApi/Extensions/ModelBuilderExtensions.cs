@@ -87,7 +87,7 @@ public static class ModelBuilderExtensions
             if (simpleKeyEnabled)
                 modelBuilder.Entity<ApiKey>();
 
-            modelBuilder.Entity<Right>();
+            modelBuilder.Entity<Claim>();
         }
 
         return modelBuilder;

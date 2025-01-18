@@ -1,10 +1,11 @@
 using HrCommonApi.Database.Models.Base;
+using HrCommonApi.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HrCommonApi.Database.Models;
 
-[Table("right")]
-public class Right : DbEntity
+[Table("claim")]
+public class Claim : DbEntity
 {
     [Column("api_key_id")]
     public Guid ApiKeyId { get; set; }
@@ -13,7 +14,7 @@ public class Right : DbEntity
     public string Name { get; set; } = string.Empty;
 
     [Column("value")]
-    public string Value { get; set; } = string.Empty;
+    public AccessType Value { get; set; } = AccessType.None;
 
     // Navigation properties
     public virtual ApiKey ApiKey { get; set; } = default!;

@@ -86,17 +86,17 @@ public class UserService<TUser, TDataContext>(TDataContext context, IConfigurati
         var audience = Configuration?["HrCommonApi:JwtAuthorization:Jwt:Audience"];
         var jwtKey = Configuration?["HrCommonApi:JwtAuthorization:Jwt:Key"];
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:TokenExpirationMinutes"]));
-        renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration["HrCommonApi:JwtAuthorization:Jwt:RefreshExpirationInMinutes"]));
+        accessExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration?["HrCommonApi:JwtAuthorization:Jwt:TokenExpirationMinutes"]));
+        renewExpiration = DateTime.Now.AddMinutes(Convert.ToDouble(Configuration?["HrCommonApi:JwtAuthorization:Jwt:RefreshExpirationInMinutes"]));
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, ((int)role).ToString()),
-            new Claim(ClaimTypes.NameIdentifier, id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, jti.ToString())
+            new System.Security.Claims.Claim(ClaimTypes.Name, username),
+            new System.Security.Claims.Claim(ClaimTypes.Role, ((int)role).ToString()),
+            new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, id.ToString()),
+            new System.Security.Claims.Claim(JwtRegisteredClaimNames.Jti, jti.ToString())
         };
         var claimsIdentity = new ClaimsIdentity(claims);
 
